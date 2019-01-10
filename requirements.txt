@@ -1,1 +1,6 @@
 kaggle
+jupyter
+pandas
+numpy
+seaborn
+
