@@ -3,7 +3,7 @@ SHELL := /bin/bash
 .DELETE_ON_ERROR:
 .PHONY: all
 
-all: kaggle env/.requirements.lastrun .git | env data data/raw
+all: data/unzipped .git | env data data/raw
 
 env:
 	python3 -m venv $@
@@ -23,6 +23,16 @@ data:
 
 data/raw: | data
 	mkdir $@
+
+data/unzipped: kaggle
+ifeq (, $(wildcard data/unzipped))
+	mkdir $@
+	cd $@; for f in ../raw/*.zip; do unzip $$f; done
+	chmod 0644 $@/*.csv
+endif
+
+data/%.csv: data/raw/%.csv.zip
+	unzip $<
 
 
 # Clean commands
