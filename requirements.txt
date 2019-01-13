@@ -1,6 +1,8 @@
+fastai
 kaggle
 jupyter
 pandas
 numpy
 seaborn
+sklearn
 
