@@ -6,3 +6,5 @@ activate
 .idea
 .ipynb_checkpoints
 **/.DS_Store
+submission.csv.zip
+
