@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import seaborn as sns
 
 
 def add_aggregated_numerical_fields(df, hist_trans_df, column_names, aggregator):
