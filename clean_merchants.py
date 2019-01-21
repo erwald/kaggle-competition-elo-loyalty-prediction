@@ -31,7 +31,7 @@ def clean_merchants():
     #   most_recent_purchases_range: More sales/purchases seems to translate to higher ranges,
     #                                so let's use the maximum b/c we're adding transactions.
     # - average_X_lagY: This one is tricky. Since the average is divided by the value of the last
-    #                   active month, it measures how th last active month was worse than the average.
+    #                   active month, it measures how the last active month was worse than the average.
     #                   Maybe we can be more precise by actually analysing the transactions,
     #                   for now I'll take the mean.
     # - active_months_lagX: Take the maximum b/c we're adding transactions.
