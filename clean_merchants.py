@@ -6,6 +6,13 @@ from pandas.api.types import CategoricalDtype
 # to indicate the we've seen both values for this merchant.
 cat_triple = CategoricalDtype(categories = ['Y', 'N', 'Both'])
 
+
+# The features 'most_recent_sales_range' and 'most_recent_purchases_range' take values
+# 'A' to 'E' where 'A' represents the highest amounts. We encode them as categrical data
+# 'A' < 'B' < ...< 'E'.
+cat_most_recent = CategoricalDtype(categories=['E', 'D', 'C', 'B', 'A'], ordered=True)
+
+
 # Takes a series of cat_triple values and returns
 # 'N' if all are 'N',
 # 'Y' if all are "Y',
@@ -21,6 +28,7 @@ def sum_triples(triples):
             return 'Y'
     else:
         return 'N'
+
 
 def clean_merchants():
     merchants_df = pd.read_csv('data/unzipped/merchants.csv')
@@ -38,9 +46,8 @@ def clean_merchants():
     merchants_df['category_4'] = merchants_df['category_4'].astype(cat_triple)
 
     # The 'most recent' columns measure the size of transactions from 'A' the most to 'E" the least.
-    # Let's translate this into 4.0 to 0.0 to make the range continuous.
-    range_to_num = {'A': 4, 'B': 3, 'C': 2, 'D': 1, 'E': 0}
-    merchants_df['most_recent_sales_range'] = merchants_df['most_recent_sales_range'].map(range_to_num)
+    merchants_df['most_recent_sales_range'] = merchants_df['most_recent_sales_range'].astype(cat_most_recent)
+    merchants_df['most_recent_purchases_range'] = merchants_df['most_recent_purchases_range'].astype(cat_most_recent)
 
     # We need to somehow unify the data for one merchant with several entries.
     # The easiest case is where the all the identifying data is equal.
@@ -79,5 +86,10 @@ def clean_merchants():
     # I don't know how to keep the cat_triple type through sum_triples.
     aggregated_df['category_1'] = aggregated_df['category_1'].astype(cat_triple)
     aggregated_df['category_4'] = aggregated_df['category_4'].astype(cat_triple)
+
+    # I especially don't understand why np.max on the values in cat_most_recent transforms
+    # them into str again, but here we go:
+    aggregated_df['most_recent_sales_range'] = aggregated_df['most_recent_sales_range'].astype(cat_most_recent)
+    aggregated_df['most_recent_purchases_range'] = aggregated_df['most_recent_purchases_range'].astype(cat_most_recent)
 
     return aggregated_df
