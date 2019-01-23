@@ -2,18 +2,22 @@ import pandas as pd
 import numpy as np
 
 
-def add_aggregated_numerical_fields(df, hist_trans_df, column_names, aggregator):
+def add_aggregated_numerical_fields(df, hist_trans_df, aggregators):
     '''This function takes a data frame of card ids and one of historical
     transactions (of which there are multiple for every card), and then
-    aggregates the transactions (only the given numerical columns) using a given
-    function, e.g. mean() or sum() or similar.
+    aggregates the transactions (only the given numerical columns) using the
+    given aggregator functions, e.g. mean() or sum() or similar.
+
+    The aggregators argument, iow, is a map of columns as keys and a list of
+    aggregator functions as values.
 
     The given data frame is modified in place (iow, nothing is returned).
     '''
     merged = df.merge(hist_trans_df, how='left', on=['card_id'])
-    aggregated = merged.groupby('card_id')[column_names].agg([aggregator])
-    for col in column_names:
-        df[f'{col}_{aggregator.__name__}'] = aggregated[col]
+    aggregated = merged.groupby('card_id').agg(aggregators)
+    for col, funcs in aggregators.items():
+        for f in funcs:
+            df[f'{col}_{f}'] = aggregated[col][f]
 
 
 def add_aggregated_categorical_fields(df, hist_trans_df, column_names):
@@ -38,5 +42,16 @@ def add_aggregated_categorical_fields(df, hist_trans_df, column_names):
         for value in values:
             # Ignore nan. We should maybe handle this in a better way.
             if not pd.isnull(value):
-                df[f'{col}_{value}_count'] = counts[value]
                 df[f'{col}_{value}_ratio'] = counts[value] / total
+
+
+def add_top_categories(df, hist_trans_df, column_names):
+    '''This function takes a data frame of card ids and one of historical
+    transactions (of which there are multiple for every card), and then, for
+    each card and each given column, picks out the most commonly occurring value
+    for that permutation.
+    '''
+    merged = df.merge(hist_trans_df, how='left', on=['card_id'])
+    grouped = merged.groupby('card_id')
+    for col in column_names:
+        df[f'{col}_top'] = grouped[col].apply(lambda x: x.mode().iat[0])
