@@ -24,16 +24,22 @@ data:
 data/raw: | data
 	mkdir $@
 
+zipfiles = $(notdir $(wildcard data/raw/*.csv.zip))
+unzippedfiles = $(notdir $(wildcard data/unzipped/*.csv))
+alreadyunzipped = $(unzippedfiles:%.csv=%.csv.zip)
+missingunzipped = $(filter-out $(alreadyunzipped),$(zipfiles))
 data/unzipped: kaggle
 ifeq (, $(wildcard data/unzipped))
 	mkdir $@
-	cd $@; for f in ../raw/*.zip; do unzip $$f; done
+endif
+ifneq (,$(missingunzipped))
+	cd $@; for f in $(addprefix ../raw/,$(missingunzipped)); do unzip $$f; done
 	chmod 0644 $@/*.csv
 endif
 
-data/%.csv: data/raw/%.csv.zip
-	unzip $<
-
+# call 'make print-{VARIABLE}' to print make variable value
+# e.g.: make print-missingunzipped
+print-%: ; @echo $* = $($*)
 
 # Clean commands
 

@@ -5,4 +5,7 @@ pandas
 numpy
 seaborn
 sklearn
+torch
+torchvision
+torchvision-nightly
 
