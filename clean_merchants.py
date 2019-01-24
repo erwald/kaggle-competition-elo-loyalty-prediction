@@ -30,7 +30,7 @@ def sum_triples(triples):
         return 'N'
 
 
-def clean_merchants():
+def clean_merchants(filename = ''):
     merchants_df = pd.read_csv('data/unzipped/merchants.csv')
 
     # There are a lot (over 100000) merchants with incomplete city and state data.
@@ -92,4 +92,16 @@ def clean_merchants():
     aggregated_df['most_recent_sales_range'] = aggregated_df['most_recent_sales_range'].astype(cat_most_recent)
     aggregated_df['most_recent_purchases_range'] = aggregated_df['most_recent_purchases_range'].astype(cat_most_recent)
 
+    if filename != '':
+        aggregated_df.to_csv(filename)
+
     return aggregated_df
+
+if __name__=="__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Clean merchants data.")
+    parser.add_argument('outfile', type=str, help='Filename of the result csv.')
+    args = vars(parser.parse_args())
+
+    clean_merchants(args['outfile'])
