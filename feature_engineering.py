@@ -54,4 +54,5 @@ def add_top_categories(df, hist_trans_df, column_names):
     merged = df.merge(hist_trans_df, how='left', on=['card_id'])
     grouped = merged.groupby('card_id')
     for col in column_names:
-        df[f'{col}_top'] = grouped[col].apply(lambda x: x.mode().iat[0])
+        top_values = grouped[col].apply(lambda x: x.mode().iat[0])
+        df[f'{col}_top'] = top_values.astype('category').cat.as_ordered()
