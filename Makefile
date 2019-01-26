@@ -50,8 +50,14 @@ endif
 # IMPORTANT: Indentation must be by TABS, not spaces.
 
 .PHONY: processdata
-processedfiles = merchants.csv
+processedfiles = merchants.csv new_merchant_transactions_with_merchants.csv historical_transactions_with_merchants.csv
 processdata: $(addprefix data/processed/,$(processedfiles))
+
+data/processed/new_merchant_transactions_with_merchants.csv: data/unzipped/new_merchant_transactions.csv data/processed/merchants.csv | data/processed
+	source activate && python join_transactions_and_merchants.py data/unzipped/new_merchant_transactions.csv $@
+
+data/processed/historical_transactions_with_merchants.csv: data/unzipped/historical_transactions.csv data/processed/merchants.csv | data/processed
+	source activate && python join_transactions_and_merchants.py data/unzipped/historical_transactions.csv $@
 
 data/processed/merchants.csv: data/unzipped/merchants.csv | data/processed
 	source activate && python clean_merchants.py $@
