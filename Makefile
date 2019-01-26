@@ -43,8 +43,7 @@ ifeq (, $(wildcard data/processed))
 endif
 
 data/processed/merchants.csv: data/processed
-	python clean_merchants.py $@
-
+	source activate && python clean_merchants.py $@
 
 # call 'make print-{VARIABLE}' to print make variable value
 # e.g.: make print-missingunzipped
