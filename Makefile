@@ -37,14 +37,27 @@ ifneq (,$(missingunzipped))
 	chmod 0644 $@/*.csv
 endif
 
+# Targets for further data processing, epecially commands that take along time
+# call 'make processdata' to update all targets.
+# For specific files call make only on their target, e.g. 'make data/processed/merchants.csv'.
+#
+# For each file 'xxx' to be created in folder 'data/processed':
+# 1. add it to 'processedfiles'
+# 2. add a target 'data/processed/xxx: <dependencies> | data/processed' with the rules to generate the file.
+#    <dependencies> should be the list of files that should trigger recreation of the file if they change.
+#    We add 'data/processed' as an order-only prerequisite to make sure this rule isn't triggered
+#    by changes to unrelated files.
+# IMPORTANT: Indentation must be by TABS, not spaces.
+
+.PHONY: processdata
+processedfiles = merchants.csv
+processdata: $(addprefix data/processed/,$(processedfiles))
+
+data/processed/merchants.csv: data/unzipped/merchants.csv | data/processed
+	source activate && python clean_merchants.py $@
+
 data/processed: data/unzipped
-ifeq (, $(wildcard data/processed))
 	mkdir $@
-endif
-
-data/processed/merchants.csv: data/processed
-	python clean_merchants.py $@
-
 
 # call 'make print-{VARIABLE}' to print make variable value
 # e.g.: make print-missingunzipped
