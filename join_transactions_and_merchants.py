@@ -6,7 +6,7 @@ def join_transactions_with_merchants(transactions_df, merchants_df):
     joined_renamed = joined.rename(columns={'category_1_x': 'category_1_transaction',
                                             'category_1_y': 'category_1_merchant',
                                             'merchant_category_id_x': 'merchant_category_id_transaction',
-                                            'merchant_category_id_y': 'merchant_category_id_x_merchant',
+                                            'merchant_category_id_y': 'merchant_category_id_merchant',
                                             'subsector_id_x': 'subsector_id_tranaction',
                                             'subsector_id_y': 'subsector_id_merchant'})
     return joined_renamed
