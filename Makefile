@@ -42,7 +42,7 @@ endif
 # For specific files call make only on their target, e.g. 'make data/processed/merchants.csv'.
 #
 # For each file 'xxx' to be created in folder 'data/processed':
-# 1. add it to 'processedfiles
+# 1. add it to 'processedfiles'
 # 2. add a target 'data/processed/xxx: <dependencies> | data/processed' with the rules to generate the file.
 #    <dependencies> should be the list of files that should trigger recreation of the file if they change.
 #    We add 'data/processed' as an order-only prerequisite to make sure this rule isn't triggered
