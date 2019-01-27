@@ -30,7 +30,7 @@ def sum_triples(triples):
         return 'N'
 
 
-def clean_merchants():
+def clean_merchants(filename = ''):
     merchants_df = pd.read_csv('data/unzipped/merchants.csv')
 
     # There are a lot (over 100000) merchants with incomplete city and state data.
@@ -51,7 +51,15 @@ def clean_merchants():
 
     # We need to somehow unify the data for one merchant with several entries.
     # The easiest case is where the all the identifying data is equal.
+    # Besides these we are left with 24 duplicated merchant IDs, each with exactly one duplicate and all but
+    # one (M_ID_645a6af169) having group ID 35 for the duplicate with otherwise exactly the same data.
+    # In each of these the group ID 35 is the smaller one, so we can just take the maxiumum
+    # We throw away the group ID 35 duplicates and just take one of M_ID_645a6af169.
+
     # Here we simply aggregate over the features:
+    # - merchant_group_id: Take the maximum, that's the non 35 value (but for M_ID_645a6af169).
+    # - merchant_category_id,
+    #   subsector_id: Take the first as they are always (but for M_ID_645a6af169) unique.
     # - numerical_1 and _2: These seem to be measuring some kind of continuous value, let's take the mean.
     # - category_1: This is always 'Y' or 'N', but only 7033 are True.
     # - most_recent_sales_range,
@@ -63,25 +71,29 @@ def clean_merchants():
     #                   for now I'll take the mean.
     # - active_months_lagX: Take the maximum b/c we're adding transactions.
     # - category_4: 'N' : 'Y' is more than 2:1.
-    grouped = merchants_df.groupby(['merchant_id', 'merchant_group_id', 'merchant_category_id', 'subsector_id'])
+    grouped = merchants_df.groupby(['merchant_id'])
 
     # In this grouping the catgory_1 and _4 groups never contain both 'N' and 'Y', but let's accumulate them
     # with sum_triples to remember it later.
-    aggregated_df = grouped.agg({'numerical_1': np.mean,
-                                 'numerical_2': np.mean,
-                                 'category_1': sum_triples,
-                                 'most_recent_sales_range': np.max,
-                                 'most_recent_purchases_range': np.max,
-                                 'avg_sales_lag3': np.mean,
-                                 'avg_purchases_lag3': np.mean,
-                                 'active_months_lag3': np.max,
-                                 'avg_sales_lag6': np.mean,
-                                 'avg_purchases_lag6': np.mean,
-                                 'active_months_lag6': np.max,
-                                 'avg_sales_lag12': np.mean,
-                                 'avg_purchases_lag12': np.mean,
-                                 'active_months_lag12': np.max,
-                                 'category_4': sum_triples})
+    aggregated_df = grouped.agg({
+        'merchant_group_id': np.max,
+        'merchant_category_id': 'first',
+        'subsector_id': 'first',
+        'numerical_1': np.mean,
+        'numerical_2': np.mean,
+        'category_1': sum_triples,
+        'most_recent_sales_range': np.max,
+        'most_recent_purchases_range': np.max,
+        'avg_sales_lag3': np.mean,
+        'avg_purchases_lag3': np.mean,
+        'active_months_lag3': np.max,
+        'avg_sales_lag6': np.mean,
+        'avg_purchases_lag6': np.mean,
+        'active_months_lag6': np.max,
+        'avg_sales_lag12': np.mean,
+        'avg_purchases_lag12': np.mean,
+        'active_months_lag12': np.max,
+        'category_4': sum_triples})
 
     # I don't know how to keep the cat_triple type through sum_triples.
     aggregated_df['category_1'] = aggregated_df['category_1'].astype(cat_triple)
@@ -92,4 +104,16 @@ def clean_merchants():
     aggregated_df['most_recent_sales_range'] = aggregated_df['most_recent_sales_range'].astype(cat_most_recent)
     aggregated_df['most_recent_purchases_range'] = aggregated_df['most_recent_purchases_range'].astype(cat_most_recent)
 
+    if filename != '':
+        aggregated_df.to_csv(filename)
+
     return aggregated_df
+
+if __name__=="__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Clean merchants data.")
+    parser.add_argument('outfile', type=str, help='Filename of the result csv.')
+    args = vars(parser.parse_args())
+
+    clean_merchants(args['outfile'])
