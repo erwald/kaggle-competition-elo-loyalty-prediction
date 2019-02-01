@@ -53,11 +53,17 @@ endif
 processedfiles = merchants.csv new_merchant_transactions_with_merchants.csv historical_transactions_with_merchants.csv
 processdata: $(addprefix data/processed/,$(processedfiles))
 
-data/processed/new_merchant_transactions_with_merchants.csv: data/unzipped/new_merchant_transactions.csv data/processed/merchants.csv | data/processed
-	source activate && python join_transactions_and_merchants.py data/unzipped/new_merchant_transactions.csv $@
+data/processed/new_merchant_transactions_with_merchants.csv: data/processed/new_merchant_transactions.csv data/processed/merchants.csv | data/processed
+	source activate && python join_transactions_and_merchants.py data/processed/new_merchant_transactions.csv $@
 
-data/processed/historical_transactions_with_merchants.csv: data/unzipped/historical_transactions.csv data/processed/merchants.csv | data/processed
-	source activate && python join_transactions_and_merchants.py data/unzipped/historical_transactions.csv $@
+data/processed/historical_transactions_with_merchants.csv: data/processed/historical_transactions.csv data/processed/merchants.csv | data/processed
+	source activate && python join_transactions_and_merchants.py data/processed/historical_transactions.csv $@
+
+data/processed/new_merchant_transactions.csv: data/unzipped/new_merchant_transactions.csv | data/processed
+	source activate && python clean_transactions.py data/unzipped/new_merchant_transactions.csv $@
+
+data/processed/historical_transactions.csv: data/unzipped/historical_transactions.csv | data/processed
+	source activate && python clean_transactions.py --calculate_time_since_purchase_with_merchant data/unzipped/historical_transactions.csv $@
 
 data/processed/merchants.csv: data/unzipped/merchants.csv | data/processed
 	source activate && python clean_merchants.py $@
