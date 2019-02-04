@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-def add_aggregated_numerical_fields(df, hist_trans_df, aggregators):
+def add_aggregated_numerical_fields(df, hist_trans_df, aggregators, prefix=''):
     '''This function takes a data frame of card ids and one of historical
     transactions (of which there are multiple for every card), and then
     aggregates the transactions (only the given numerical columns) using the
@@ -17,10 +17,10 @@ def add_aggregated_numerical_fields(df, hist_trans_df, aggregators):
     aggregated = merged.groupby('card_id').agg(aggregators)
     for col, funcs in aggregators.items():
         for f in funcs:
-            df[f'{col}_{f}'] = aggregated[col][f]
+            df[f'{prefix}{col}_{f}'] = aggregated[col][f]
 
 
-def add_aggregated_categorical_fields(df, hist_trans_df, column_names):
+def add_aggregated_categorical_fields(df, hist_trans_df, column_names, prefix=''):
     '''This function takes a data frame of card ids and one of historical
     transactions (of which there are multiple for every card), and then
     aggregates the transactions (only the given categorical columns) by summing
@@ -42,10 +42,10 @@ def add_aggregated_categorical_fields(df, hist_trans_df, column_names):
         for value in values:
             # Ignore nan. We should maybe handle this in a better way.
             if not pd.isnull(value):
-                df[f'{col}_{value}_ratio'] = counts[value] / total
+                df[f'{prefix}{col}_{value}_ratio'] = counts[value] / total
 
 
-def add_top_categories(df, hist_trans_df, column_names):
+def add_top_categories(df, hist_trans_df, column_names, prefix=''):
     '''This function takes a data frame of card ids and one of historical
     transactions (of which there are multiple for every card), and then, for
     each card and each given column, picks out the most commonly occurring value
@@ -54,4 +54,5 @@ def add_top_categories(df, hist_trans_df, column_names):
     merged = df.merge(hist_trans_df, how='left', on=['card_id'])
     grouped = merged.groupby('card_id')
     for col in column_names:
-        df[f'{col}_top'] = grouped[col].apply(lambda x: x.mode().iat[0])
+        top_vals = grouped[col].apply(lambda x: x.mode().iat[0])
+        df[f'{prefix}{col}_top'] = top_vals.astype('category').cat.as_ordered()
