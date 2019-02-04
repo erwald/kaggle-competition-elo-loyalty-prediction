@@ -19,10 +19,10 @@ env/.requirements.lastrun: requirements.txt | env
 	git commit -m "Initial commit"
 
 data:
-	mkdir $@
+	mkdir -p $@
 
 data/raw: | data
-	mkdir $@
+	mkdir -p $@
 
 zipfiles = $(notdir $(wildcard data/raw/*.csv.zip))
 unzippedfiles = $(notdir $(wildcard data/unzipped/*.csv))
@@ -30,7 +30,7 @@ alreadyunzipped = $(unzippedfiles:%.csv=%.csv.zip)
 missingunzipped = $(filter-out $(alreadyunzipped),$(zipfiles))
 data/unzipped: kaggle
 ifeq (, $(wildcard data/unzipped))
-	mkdir $@
+	mkdir -p $@
 endif
 ifneq (,$(missingunzipped))
 	cd $@; for f in $(addprefix ../raw/,$(missingunzipped)); do unzip $$f; done
@@ -69,7 +69,7 @@ data/processed/merchants.csv: data/unzipped/merchants.csv | data/processed
 	source activate && python clean_merchants.py $@
 
 data/processed: data/unzipped
-	mkdir $@
+	mkdir -p $@
 
 # call 'make print-{VARIABLE}' to print make variable value
 # e.g.: make print-missingunzipped
