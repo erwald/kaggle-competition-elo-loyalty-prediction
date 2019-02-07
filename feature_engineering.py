@@ -46,6 +46,13 @@ def add_aggregated_categorical_fields(df, hist_trans_df, column_names, prefix=''
                 df[f'{prefix}{col}_{value}_ratio'] = counts[value] / total
 
 
+def get_top_category(row):
+    '''Given a row with some categorical column, return the most commonly
+    occurring value (or NaN if none) for that card id and category.'''
+    mode = row.mode()
+    return mode.iat[0] if len(mode) > 0 else np.nan
+
+
 def add_top_categories(df, hist_trans_df, column_names, prefix=''):
     '''This function takes a data frame of card ids and one of historical
     transactions (of which there are multiple for every card), and then, for
@@ -55,7 +62,7 @@ def add_top_categories(df, hist_trans_df, column_names, prefix=''):
     merged = df.merge(hist_trans_df, how='left', on=['card_id'])
     grouped = merged.groupby('card_id')
     for col in column_names:
-        top_vals = grouped[col].apply(lambda x: x.mode().iat[0])
+        top_vals = grouped[col].apply(get_top_category)
         df[f'{prefix}{col}_top'] = top_vals.astype('category').cat.as_ordered()
 
 
@@ -80,13 +87,29 @@ def process_data(df, hist_trans_df, merch_trans_df):
         'merchant_id': ['nunique'],
         'state_id': ['nunique'],
         'city_id': ['nunique'],
+        'numerical_1': ['sum', 'mean', 'min', 'max', 'std'],
+        'numerical_2': ['sum', 'mean', 'min', 'max', 'std'],
+        'avg_sales_lag3': ['sum', 'mean', 'min', 'max', 'std'],
+        'avg_sales_lag6': ['sum', 'mean', 'min', 'max', 'std'],
+        'avg_sales_lag12': ['sum', 'mean', 'min', 'max', 'std'],
+        'avg_purchases_lag3': ['sum', 'mean', 'min', 'max', 'std'],
+        'avg_purchases_lag6': ['sum', 'mean', 'min', 'max', 'std'],
+        'avg_purchases_lag12': ['sum', 'mean', 'min', 'max', 'std'],
+        'active_months_lag3': ['sum', 'mean', 'min', 'max', 'std'],
+        'active_months_lag6': ['sum', 'mean', 'min', 'max', 'std'],
+        'active_months_lag12': ['sum', 'mean', 'min', 'max', 'std'],
+        'merchant_category_id_transaction': ['nunique'],
+        'merchant_category_id_merchant': ['nunique'],
+        'subsector_id_transaction': ['nunique'],
+        'subsector_id_merchant': ['nunique'],
+        'merchant_group_id': ['nunique'],
+        'most_recent_sales_range': ['nunique'],
+        'most_recent_purchases_range': ['nunique'],
+        'elapsed_since_last_purchase': ['sum', 'mean', 'min', 'max', 'std'],
     }
 
     # First up we aggregate the data in the `historical_transactions` table.
     hist_trans_aggs = {
-        'merchant_category_id': ['nunique'],
-        'subsector_id': ['nunique'],
-        'elapsed_since_last_purchase': ['sum', 'mean', 'min', 'max', 'std'],
         'elapsed_since_last_merch_purchase': ['sum', 'mean', 'min', 'max', 'std'],
     }
     print('Aggregating numerical fields from the historical transactions ...')
@@ -102,66 +125,84 @@ def process_data(df, hist_trans_df, merch_trans_df):
     add_aggregated_categorical_fields(df,
                                       hist_trans_df,
                                       column_names=['authorized_flag',
-                                                    'category_1',
+                                                    'category_1_transaction',
+                                                    'category_1_merchant',
                                                     'category_2',
-                                                    'category_3'])
+                                                    'category_3',
+                                                    'category_4',
+                                                    'purchase_Is_month_start',
+                                                    'purchase_Is_month_end',
+                                                    'purchase_Year',
+                                                    'most_recent_sales_range',
+                                                    'most_recent_purchases_range'])
+
+    print('Getting top values for categorical fields from the historical transactions ...')
     add_top_categories(df,
                        hist_trans_df,
                        column_names=['authorized_flag',
-                                     'category_1',
-                                     'subsector_id',
+                                     'category_1_transaction',
+                                     'category_1_merchant',
+                                     'category_2',
+                                     'category_3',
+                                     'category_4',
+                                     'subsector_id_transaction',
+                                     'subsector_id_merchant',
                                      'city_id',
                                      'state_id',
                                      'purchase_Year',
                                      'purchase_Month',
                                      'purchase_Week',
                                      'purchase_Day',
-                                     'purchase_Dayofweek'])
+                                     'purchase_Dayofweek',
+                                     'most_recent_sales_range',
+                                     'most_recent_purchases_range'])
 
     # Next we aggregate the data in the `new_merchants_transactions` table.
-    merch_trans_aggs = {
-        'category_1_transaction': ['nunique'],
-        'category_2': ['nunique'],
-        'category_3': ['nunique'],
-        'category_4': ['nunique'],
-        'merchant_category_id_transaction': ['nunique'],
-        'merchant_category_id_merchant': ['nunique'],
-        'merchant_group_id': ['nunique'],
-        'subsector_id_merchant': ['nunique'],
-        'category_1_merchant': ['nunique'],
-        'state_id': ['nunique'],
-        'elapsed_since_last_purchase': ['sum', 'mean', 'min', 'max', 'std'],
-        'numerical_1': ['sum', 'mean', 'min', 'max', 'std'],
-        'numerical_2': ['sum', 'mean', 'min', 'max', 'std'],
-        'avg_sales_lag3': ['sum', 'mean', 'min', 'max', 'std'],
-        'avg_purchases_lag3': ['sum', 'mean', 'min', 'max', 'std'],
-        'active_months_lag3': ['sum', 'mean', 'min', 'max', 'std'],
-        'avg_sales_lag6': ['sum', 'mean', 'min', 'max', 'std'],
-        'avg_purchases_lag6': ['sum', 'mean', 'min', 'max', 'std'],
-        'active_months_lag6': ['sum', 'mean', 'min', 'max', 'std'],
-        'avg_sales_lag12': ['sum', 'mean', 'min', 'max', 'std'],
-        'avg_purchases_lag12': ['sum', 'mean', 'min', 'max', 'std'],
-        'active_months_lag12': ['sum', 'mean', 'min', 'max', 'std'],
-    }
     print('Aggregating numerical fields from the new merchant transactions ...')
     add_aggregated_numerical_fields(df,
                                     merch_trans_df,
-                                    aggregators={**aggs, **merch_trans_aggs},
+                                    aggregators=aggs,
                                     prefix='merch_')
 
     # These ones don't work for the new_merchant_transactions for some reason
     # (missing data?), so let's skip them for now ...
-    # add_aggregated_categorical_fields(df,
-    #                                   merch_trans_df,
-    #                                   column_names=['category_1_transaction', 'merchant_category_id_transaction',
-    #                                                 'state_id', 'purchase_Year', 'month_lag'],
-    #                                   prefix='merch_')
+    print('Aggregating categorical fields from the new merchant transactions ...')
+    add_aggregated_categorical_fields(df,
+                                      merch_trans_df,
+                                      column_names=['authorized_flag',
+                                                    'category_1_transaction',
+                                                    'category_1_merchant',
+                                                    'category_2',
+                                                    'category_3',
+                                                    'category_4',
+                                                    'purchase_Is_month_start',
+                                                    'purchase_Is_month_end',
+                                                    'purchase_Year',
+                                                    'most_recent_sales_range',
+                                                    'most_recent_purchases_range'],
+                                      prefix='merch_')
 
-    # add_top_categories(df,
-    #                    merch_trans_df,
-    #                    column_names=['category_1_transaction', 'merchant_category_id_transaction',
-    #                                  'state_id', 'purchase_Year', 'month_lag'],
-    #                    prefix='merch_')
+    print('Getting top values for categorical fields from the new merchant transactions ...')
+    add_top_categories(df,
+                       merch_trans_df,
+                       column_names=['authorized_flag',
+                                     'category_1_transaction',
+                                     'category_1_merchant',
+                                     'category_2',
+                                     'category_3',
+                                     'category_4',
+                                     'subsector_id_transaction',
+                                     'subsector_id_merchant',
+                                     'city_id',
+                                     'state_id',
+                                     'purchase_Year',
+                                     'purchase_Month',
+                                     'purchase_Week',
+                                     'purchase_Day',
+                                     'purchase_Dayofweek',
+                                     'most_recent_sales_range',
+                                     'most_recent_purchases_range'],
+                       prefix='merch_')
 
 
 if __name__ == "__main__":
@@ -179,11 +220,15 @@ if __name__ == "__main__":
                         help='Filename of the result csv.')
     args = vars(parser.parse_args())
 
-    # Load csv files.
+    print(f"Loading data frame from {args['train_df']} ...")
     train_df = pd.read_csv(args['train_df'],
                            index_col='card_id',
                            parse_dates=['first_active_month'])
+
+    print(f"Loading data frame from {args['hist_trans_df']} ...")
     hist_trans_df = pd.read_csv(args['hist_trans_df'])
+
+    print(f"Loading data frame from {args['merch_trans_df']} ...")
     merch_trans_df = pd.read_csv(args['merch_trans_df'])
 
     process_data(train_df, hist_trans_df, merch_trans_df)
