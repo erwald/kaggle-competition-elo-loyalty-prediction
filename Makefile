@@ -10,6 +10,7 @@ env:
 	ln -s $@/bin/activate activate
 
 env/.requirements.lastrun: requirements.txt | env
+	source activate && pip install --upgrade pip
 	source activate && pip install -r requirements.txt
 	touch $@
 
