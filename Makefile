@@ -56,8 +56,14 @@ endif
 # IMPORTANT: Indentation must be by TABS, not spaces.
 
 .PHONY: processdata
-processedfiles = merchants.csv new_merchant_transactions_with_merchants.csv historical_transactions_with_merchants.csv
+processedfiles = merchants.csv new_merchant_transactions_with_merchants.csv historical_transactions_with_merchants.csv train_with_aggregated_features.csv test_with_aggregated_features.csv
 processdata: $(addprefix data/processed/,$(processedfiles))
+
+data/processed/train_with_aggregated_features.csv: data/unzipped/train.csv data/processed/historical_transactions_with_merchants.csv data/processed/new_merchant_transactions_with_merchants.csv | data/processed
+	source activate && python feature_engineering.py data/unzipped/train.csv data/processed/historical_transactions_with_merchants.csv data/processed/new_merchant_transactions_with_merchants.csv $@
+
+data/processed/test_with_aggregated_features.csv: data/unzipped/test.csv data/processed/historical_transactions_with_merchants.csv data/processed/new_merchant_transactions_with_merchants.csv | data/processed
+	source activate && python feature_engineering.py data/unzipped/test.csv data/processed/historical_transactions_with_merchants.csv data/processed/new_merchant_transactions_with_merchants.csv $@
 
 data/processed/new_merchant_transactions_with_merchants.csv: data/processed/new_merchant_transactions.csv data/processed/merchants.csv | data/processed
 	source activate && python join_transactions_and_merchants.py data/processed/new_merchant_transactions.csv $@
